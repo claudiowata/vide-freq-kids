@@ -168,13 +168,18 @@ A idade não é gravada. A view `children_with_age` calcula `age_years` e respei
 
 ## Hierarquia
 
-`pastor` → `discipulador` → `lider`. O elo da pastora é opcional.
+`pastor` → `discipulador` → `lider`. Uma discipuladora também pode ficar abaixo de outra discipuladora. O elo da pastora é opcional.
 
 - Discipuladora com `supervisor_id` nulo é raiz.
 - Líder sempre aponta para uma discipuladora.
 - Cada um vê a si, quem está abaixo e o caminho até a raiz. Não vê a árvore ao lado.
+- Discipuladora, a raiz dessa árvore e quem está acima (a pastora, quando existe) têm leitura de todo o cadastro das células abaixo. Entram a ficha da célula, os líderes, as crianças com responsáveis, telefones, mãe e pai convertidos e status, a frequência e os fechamentos. A subárvore de uma discipuladora subordinada entra nessa leitura.
+- Líder de célula vê só a própria célula: não vê a célula ao lado nem a de uma discipuladora subordinada.
+- Discipuladora de outro ramo não vê essa árvore.
 - Ser admin não abre a árvore da outra discipuladora. O admin só cria o primeiro acesso e pode vincular uma pastora.
 - `pastor_id` em pessoas e células pode ficar nulo. A visibilidade usa `supervisor_id`.
+
+A hierarquia que aceita discipuladora subordinada está em `supabase/migrations/20261118180000_acesso_leitura_discipuladora.sql`. As políticas de leitura da foundation já percorrem `supervisor_id`; essa migration não as substitui. O teste de RLS está em `supabase/tests/acesso-discipuladora.sql`.
 
 ## Fechamento e ficha
 

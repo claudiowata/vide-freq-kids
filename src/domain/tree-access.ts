@@ -2,7 +2,9 @@
  * Quem enxerga quem na rede Radicais Kids.
  *
  * A pastora é opcional. A árvore é a cadeia `supervisorId`:
- * pastor(a) → discipulador(a) → líder. Uma discipuladora com
+ * pastor(a) → discipulador(a) → líder. Uma discipuladora também pode
+ * ficar abaixo de outra discipuladora. Quem está acima lê toda a
+ * subárvore; o líder só a própria célula. Uma discipuladora com
  * supervisor nulo é raiz e a rede funciona sem nenhuma pastora.
  *
  * `pastorId` na célula é um atalho anulável. A visibilidade não
