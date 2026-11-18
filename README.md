@@ -8,6 +8,7 @@ Esta unidade é a base: visual, login, banco e a regra de visitante/membro. As t
 
 - Visual em verde-água, cartões brancos e a barra inferior com Início, Frequência, Fechamento, Acompanhar e Cadastro.
 - Login por e-mail e senha. Não há cadastro público.
+- Quem esquece a senha pede um link em `/esqueci-senha` e define outra em `/redefinir-senha`.
 - Contas criadas pela liderança, com senha provisória e troca obrigatória no primeiro acesso.
 - A rede pode existir **sem pastora**. A primeira discipuladora nasce como raiz e admin.
 - Uma pastora pode ser colocada acima das discipuladoras que já existem, sem reescrever células, crianças ou relatórios.
@@ -82,6 +83,54 @@ supabase db push
 `db push` só envia o que está em `supabase/migrations`. O seed não vai junto.
 
 No painel do projeto, em Authentication → Providers → Email, desligue os novos cadastros. O `enable_signup = false` do `config.toml` vale para o CLI local; o push do banco não altera essa chave do Auth.
+
+## Recuperação de senha no painel
+
+O app pede o e-mail em `/esqueci-senha` e chama `resetPasswordForEmail` com retorno em `/auth/callback?next=/redefinir-senha`. O callback troca o `code` (PKCE) pela sessão, ou o `token_hash` com `type=recovery`, e só então abre `/redefinir-senha`. Nada disso entra no repositório como chave secreta.
+
+O projeto remoto ainda não tem um site Netlify publicado. Use a origem real do site no Netlify, sem barra no final, no lugar de `https://SEU-SITE.netlify.app`.
+
+Em Authentication → URL Configuration:
+
+| Campo | Valor |
+| --- | --- |
+| Site URL | `https://SEU-SITE.netlify.app` |
+| Redirect URLs | `https://SEU-SITE.netlify.app/**` |
+| Redirect URLs | `http://127.0.0.1:3847/**` |
+| Redirect URLs | `http://localhost:3847/**` |
+
+O `redirectTo` leva query (`next` e, no fluxo PKCE, `sb_flow_id`). O curinga `/**` cobre o caminho `/auth/callback` e essa query. Se o projeto só aceitar URL exata, acrescente também:
+
+- `https://SEU-SITE.netlify.app/auth/callback`
+- `http://127.0.0.1:3847/auth/callback`
+- `http://localhost:3847/auth/callback`
+
+Salve. Sem essas URLs o Supabase ignora o retorno do app e o link do e-mail não abre a tela de nova senha.
+
+Em Authentication → Emails (ou Email Templates) → Reset Password, assunto:
+
+```
+Redefinir a senha do Vide Freq Kids
+```
+
+Corpo, em HTML:
+
+```html
+<h2>Redefinir senha</h2>
+<p>Recebemos um pedido para criar uma nova senha no Vide Freq Kids.</p>
+<p><a href="{{ .ConfirmationURL }}">Criar uma nova senha</a></p>
+<p>Se você não pediu isso, ignore este e-mail. O link vale por 1 hora e só pode ser usado uma vez.</p>
+```
+
+`{{ .ConfirmationURL }}` é o fluxo PKCE: o Supabase devolve o navegador para `/auth/callback` com `code`. O mesmo arquivo está em `supabase/templates/recovery.html` para o Supabase local.
+
+Se o template for o formato `token_hash`, o app também aceita. O link precisa apontar para o callback com `type=recovery`:
+
+```html
+<p><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=recovery&next=/redefinir-senha">Criar uma nova senha</a></p>
+```
+
+Nesse caso a Site URL tem de ser a origem do app (Netlify ou `http://127.0.0.1:3847`), sem barra no final.
 
 A chave secreta fica só no `.env.local` (e, em produção, no ambiente do servidor). Não entra no repositório.
 
