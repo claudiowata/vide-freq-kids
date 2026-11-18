@@ -13,7 +13,7 @@ Esta unidade é a base: visual, login, banco e a regra de visitante/membro. As t
 - A rede pode existir **sem pastora**. A primeira discipuladora nasce como raiz e admin.
 - Uma pastora pode ser colocada acima das discipuladoras que já existem, sem reescrever células, crianças ou relatórios.
 - Cada pessoa vê só a própria árvore.
-- Criança começa visitante, vira membro com 4 presenças consecutivas de célula e volta a visitante com 4 faltas consecutivas.
+- Criança começa visitante, vira membro com 4 presenças consecutivas de célula e volta a visitante com 8 faltas consecutivas.
 
 ## Requisitos
 
@@ -71,7 +71,7 @@ supabase status       # URL, anon/publishable e service_role
 
 O primeiro acesso da rede, com o banco vazio (sem o seed), fica em `/setup`: cria a discipuladora raiz, sem pastora. Isso exige `SUPABASE_SECRET_KEY`.
 
-`public.needs_initial_setup()` é `SECURITY DEFINER` e continua executável pelo papel `anon`. `/login` e `/setup` a chamam antes de existir sessão; a função só responde se ainda não há nenhuma conta. As outras funções `SECURITY DEFINER` não são do `anon`. `vincular_pastor` exige `auth.uid()` e só segue se essa pessoa é admin, a pastora informada ou a própria discipuladora. `multiplicar_celula` e `remanejar_criancas` também exigem sessão e a subárvore. A migration é `supabase/migrations/20261118200000_revoke_anon_security_definer.sql`.
+`public.needs_initial_setup()` é `SECURITY DEFINER` e continua executável pelo papel `anon`. `/login` e `/setup` a chamam antes de existir sessão; a função só responde se ainda não há nenhuma conta. As outras funções `SECURITY DEFINER` não são do `anon`. `vincular_pastor` exige `auth.uid()` e só segue se essa pessoa é admin, a pastora informada ou a própria discipuladora. `multiplicar_celula` e `remanejar_criancas` também exigem sessão e a subárvore. A migration `supabase/migrations/20261118200000_revoke_anon_security_definer.sql` varre as funções que já existem. `supabase/migrations/20261118215000_revoke_anon_funcoes_guarda.sql` repete a varredura depois da guarda compartilhada, para incluir `internal.attendance_require_shared_custody` e a `recompute_child_status` reescrita nessa migration.
 
 ## Aplicar no projeto remoto
 
@@ -159,12 +159,17 @@ Vale para encontros de **célula**. Culto não entra. Só conta a chamada regist
 | --- | --- |
 | Cadastro | visitante, sequências zeradas |
 | 4 presenças consecutivas | vira membro; a sequência de presenças permanece |
-| 4 ausências consecutivas de um membro | volta a visitante |
+| 8 ausências consecutivas de um membro | volta a visitante |
 | Presença | zera a sequência de ausências |
 | Ausência | zera a sequência de presenças |
+| Semana com o outro responsável | neutra: não é presença nem falta e não quebra a sequência |
 | Primeira presença | grava `first_visit_on` e não muda mais |
 
-O histórico fica em `child_status_history`. A função `internal.recompute_child_status` refaz o cálculo quando a chamada muda. O mesmo algoritmo está em `src/domain/child-status.ts`, coberto por teste.
+Guarda compartilhada fica no cadastro da criança (`guarda_compartilhada`, rótulo "Guarda compartilhada (uma semana com cada responsável)"). Na chamada, só essa criança vê a terceira opção, **Semana com o outro responsável**. Quatro presenças intercaladas com essas semanas neutras contam como quatro seguidas. Sem o campo marcado, a opção não aparece.
+
+No fechamento, M, % e V ignoram a semana que só tem essa marca neutra: ela não entra como falta nem como semana zerada. Uma falta registrada continua abaixando a média de membros presentes.
+
+O histórico fica em `child_status_history`. A volta a visitante grava `oito_ausencias_consecutivas`. A função `internal.recompute_child_status` refaz o cálculo quando a chamada muda, inclusive para as crianças que já estavam gravadas. O mesmo algoritmo está em `src/domain/child-status.ts`, coberto por teste. A migration é `supabase/migrations/20261118210000_status_guarda_compartilhada.sql`.
 
 A idade não é gravada. A view `children_with_age` calcula `age_years` e respeita o RLS.
 
@@ -225,4 +230,4 @@ O amarelo e o teal claro ficam em destaque e no logo. Texto pequeno usa o roxo, 
 ## Decisões em aberto
 
 - A cor da célula (verde, azul, vermelha, bege) continua só um campo gravado. Ainda não há faixas nem regra.
-- Falta só conta se alguém registrar a ausência. A tela de chamada, que pode marcar o restante como falta, vem depois.
+- Falta só conta se alguém registrar a ausência. A chamada marca presente, falta ou, na guarda compartilhada, a semana com o outro responsável.

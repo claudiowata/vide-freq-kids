@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { CELL_TYPE_LABELS } from "@/domain/cell-type"
 import { WEEKDAYS, canManageNetwork } from "@/domain/cell-multiplication"
 import { getCurrentProfile } from "@/lib/auth"
+import { CustodyForm } from "./custody-form"
 import { loadCadastro } from "./load"
 
 export const metadata = { title: "Cadastro" }
@@ -34,6 +35,11 @@ async function CadastroScreen({
       {aviso === "remanejada" ? (
         <p className="rounded-xl bg-[#F4ECFB] px-3 py-2 text-sm text-ink" role="status">
           Crianças remanejadas. O status e os dados dos pais foram junto.
+        </p>
+      ) : null}
+      {aviso === "guarda" ? (
+        <p className="rounded-xl bg-[#F4ECFB] px-3 py-2 text-sm text-ink" role="status">
+          Guarda compartilhada atualizada.
         </p>
       ) : null}
       {data.cellsError ? (
@@ -73,6 +79,25 @@ async function CadastroScreen({
                   {cell.meetingTime ? ` · ${cell.meetingTime}` : ""}
                 </p>
                 {cell.address ? <p className="text-sm text-ink/70">{cell.address}</p> : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </ModuleCard>
+
+      <ModuleCard eyebrow="Ficha" title="Crianças">
+        {data.children.length === 0 ? (
+          <p>Nenhuma criança aparece para esta conta.</p>
+        ) : (
+          <ul className="space-y-3">
+            {data.children.map((child) => (
+              <li key={child.id} className="rounded-2xl bg-[#FFF8EE] px-3 py-3 ring-1 ring-primary/10">
+                <p className="font-semibold text-ink">{child.fullName}</p>
+                <p className="text-sm text-ink/70">
+                  {data.cells.find((cell) => cell.id === child.cellId)?.name ?? "Célula"} ·{" "}
+                  {child.status === "membro" ? "Membro" : "Visitante"}
+                </p>
+                <CustodyForm childId={child.id} shared={child.sharedCustody} />
               </li>
             ))}
           </ul>

@@ -256,7 +256,7 @@ values
   ('cccccccc-cccc-4ccc-8ccc-ccccccccccc3', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2', false),
   ('cccccccc-cccc-4ccc-8ccc-ccccccccccc4', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2', true);
 
--- Bia: 4 presenças e depois 4 faltas. Volta a visitante.
+-- Bia: 4 presenças e depois 4 faltas. Continua membro: a volta exige 8 faltas.
 insert into public.attendance (meeting_id, child_id, present)
 values
   ('cccccccc-cccc-4ccc-8ccc-ccccccccccc1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb3', true),

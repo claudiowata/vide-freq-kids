@@ -59,8 +59,8 @@ begin
   if nico.status <> 'visitante' or nico.presence_streak <> 1 or nico.absence_streak <> 0 then
     raise exception 'Nico deveria continuar visitante depois da falta no meio';
   end if;
-  if bia.status <> 'visitante' or bia.absence_streak <> 4 or bia.first_visit_on is null then
-    raise exception 'Bia deveria voltar a visitante depois de 4 faltas';
+  if bia.status <> 'membro' or bia.absence_streak <> 4 or bia.presence_streak <> 0 or bia.first_visit_on is null then
+    raise exception 'Bia deveria continuar membro com 4 faltas';
   end if;
   if caio.status <> 'visitante' or caio.presence_streak <> 3 then
     raise exception 'Caio não deveria ser promovido com 3 presenças';
@@ -70,8 +70,8 @@ begin
   end if;
 
   if (select count(*) from public.child_status_history h
-      where h.child_id = bia.id and h.reason = 'quatro_ausencias_consecutivas') <> 1 then
-    raise exception 'histórico da Bia sem a volta a visitante';
+      where h.child_id = bia.id and h.reason = 'oito_ausencias_consecutivas') <> 0 then
+    raise exception 'Bia não deveria voltar a visitante com 4 faltas';
   end if;
 end $$;
 
