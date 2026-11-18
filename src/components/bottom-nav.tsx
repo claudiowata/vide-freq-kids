@@ -28,7 +28,10 @@ export function BottomNav() {
       className="fixed inset-x-0 bottom-3 z-20 mx-auto flex w-[min(100%-1rem,36rem)] items-stretch justify-between gap-0.5 rounded-full bg-white/95 p-1 shadow-[0_10px_40px_rgba(59,33,92,0.16)] ring-1 ring-primary/10 backdrop-blur"
     >
       {tabs.map((tab) => {
-        const active = pathname === tab.href
+        const active =
+          tab.href === "/"
+            ? pathname === "/"
+            : pathname === tab.href || pathname.startsWith(`${tab.href}/`)
         const Icon = tab.icon
         return (
           <Link
