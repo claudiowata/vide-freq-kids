@@ -236,6 +236,60 @@ begin
 end $$;
 rollback;
 
+-- M, % e V do fechamento, tipos de célula e pais convertidos na criança.
+do $$
+declare
+  m numeric;
+  percentual numeric;
+  v numeric;
+  maes integer;
+  pais integer;
+begin
+  select members_average, attendance_percent, visitors_average
+  into m, percentual, v
+  from public.monthly_reports
+  where cell_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1';
+
+  if m <> 10 or percentual <> 83 or v <> 1 then
+    raise exception 'fechamento esperado M=10 %% =83 V=1, veio % % %', m, percentual, v;
+  end if;
+
+  if (select cell_type from public.cells where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1') <> 'mista_juvenis' then
+    raise exception 'C Mista J deveria ser mista_juvenis';
+  end if;
+  if (select cell_type from public.cells where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2') <> 'kids' then
+    raise exception 'célula de crianças deveria ser kids';
+  end if;
+
+  select t.maes, t.pais into maes, pais
+  from internal.contagem_pais_convertidos('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1') as t;
+  if maes <> 2 or pais <> 2 then
+    raise exception 'totais de pais convertidos da célula do Bruno: % mães, % pais', maes, pais;
+  end if;
+end $$;
+
+-- Falta no culto não quebra a sequência da célula.
+begin;
+insert into public.attendance (meeting_id, child_id, present)
+values (
+  'cccccccc-cccc-4ccc-8ccc-ccccccccccc9',
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb4',
+  false
+);
+do $$
+declare
+  streak integer;
+  child_status text;
+begin
+  select presence_streak, status into streak, child_status
+  from public.children
+  where id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb4';
+  if streak <> 3 or child_status <> 'visitante' then
+    raise exception 'culto alterou o Caio: % %', child_status, streak;
+  end if;
+end $$;
+rollback;
+
 -- needs_initial_setup é falso quando já existe gente.
 do $$
 begin

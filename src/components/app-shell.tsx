@@ -18,10 +18,10 @@ export function AppShell({
       <header className="flex items-center gap-3">
         <Logo />
         <div className="min-w-0 flex-1">
-          <p className="truncate font-serif text-base leading-tight text-[#134e4a] sm:text-lg">
+          <p className="truncate font-serif text-base leading-tight text-ink sm:text-lg">
             Igreja Videira Barra Funda
           </p>
-          <p className="truncate text-xs text-teal-900/65">
+          <p className="truncate text-xs text-ink/65">
             Vide Freq Kids · {profile.full_name} · {roleLabel(profile.role)}
           </p>
         </div>
@@ -34,10 +34,10 @@ export function AppShell({
       </header>
 
       <div className="mt-8">
-        <h1 className="font-serif text-4xl tracking-tight text-[#134e4a]">
+        <h1 className="font-serif text-4xl tracking-tight text-ink">
           Olá, {firstName(profile.full_name)}
         </h1>
-        <p className="mt-1 max-w-xl text-sm text-teal-900/70 sm:text-base">
+        <p className="mt-1 max-w-xl text-sm text-ink/70 sm:text-base">
           {roleLabel(profile.role)} · {roleBlurb(profile.role)}
         </p>
       </div>
@@ -54,8 +54,8 @@ export function PasswordFrame({ children }: { children: React.ReactNode }) {
       <div className="mb-6 flex items-center gap-3">
         <Logo />
         <div>
-          <p className="font-serif text-lg text-[#134e4a]">Vide Freq Kids</p>
-          <p className="text-xs text-teal-900/65">Primeiro acesso</p>
+          <p className="font-serif text-lg text-ink">Vide Freq Kids</p>
+          <p className="text-xs text-ink/65">Primeiro acesso</p>
         </div>
       </div>
       {children}
@@ -68,7 +68,7 @@ export function ShellFallback() {
     <div className="mx-auto flex min-h-full w-full max-w-5xl flex-col px-4 pt-8">
       <div className="h-10 w-64 animate-pulse rounded-xl bg-white/80" />
       <div className="mt-8 h-10 w-48 animate-pulse rounded-xl bg-white/80" />
-      <p className="mt-6 text-sm text-teal-900/60">Carregando a rede…</p>
+      <p className="mt-6 text-sm text-ink/60">Carregando a rede…</p>
     </div>
   )
 }

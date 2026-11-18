@@ -156,7 +156,7 @@ values
     'Anfitrião Exemplo', true,
     'Rua das Acácias, 100 — Bairro Exemplo',
     1, '19:00', false,
-    '2024-08-01', 'mista', 'vermelha'
+    '2024-08-01', 'mista_juvenis', 'vermelha'
   ),
   (
     'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2',
@@ -169,7 +169,7 @@ values
     'Casa Exemplo', false,
     'Rua do Ipê, 20 — Bairro Exemplo',
     5, '19:30', false,
-    '2025-03-07', 'criancas', 'azul'
+    '2025-03-07', 'kids', 'azul'
   ),
   (
     'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
@@ -188,7 +188,7 @@ values
 insert into public.children (
   id, cell_id, full_name, birth_date, parents_are_believers, phone,
   guardians, authorized_pickup, allergies_medication, image_authorization,
-  encontro, batismo, culto, registered_on
+  encontro, batismo, culto, mae_convertida, pai_convertido, registered_on
 )
 values
   (
@@ -196,35 +196,35 @@ values
     'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
     'Lia Presença', '2016-02-02', true, '11910000001',
     'Mãe Exemplo', 'Mãe Exemplo', 'nenhuma', true,
-    false, false, true, '2026-05-01'
+    false, false, true, true, true, '2026-05-01'
   ),
   (
     'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2',
     'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
     'Nico Intervalo', '2015-06-18', false, '11910000002',
     'Pai Exemplo', 'Pai Exemplo ou tia', 'alergia a amendoim', false,
-    false, false, false, '2026-05-01'
+    false, false, false, false, false, '2026-05-01'
   ),
   (
     'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb3',
     'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
     'Bia Queda', '2014-09-09', true, '11910000003',
     'Avó Exemplo', 'Avó Exemplo', 'usa bombinha', true,
-    true, false, true, '2026-05-01'
+    true, false, true, true, false, '2026-05-01'
   ),
   (
     'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb4',
     'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
     'Caio Quase', '2017-01-30', null, '11910000004',
     'Mãe Exemplo', 'Mãe Exemplo', null, null,
-    false, false, false, '2026-05-01'
+    false, false, false, false, true, '2026-05-01'
   ),
   (
     'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb5',
     'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
     'Duda Visita', '2013-12-12', false, '11910000005',
     'Pai Exemplo', 'Pai Exemplo', null, false,
-    false, false, false, '2026-06-01'
+    false, false, false, false, false, '2026-06-01'
   );
 
 insert into public.meetings (id, cell_id, held_on, kind)
@@ -278,13 +278,13 @@ values
 insert into public.monthly_reports (
   cell_id, year, month, members_count,
   sent_to_encontro, youth_baptized, is_project_cell, bridge_event_visitors,
-  mothers_converted, fathers_converted, color_classification, is_parallel,
+  color_classification, is_parallel,
   w1_members, w1_visitors, w2_members, w2_visitors, w3_members, w3_visitors,
-  w4_members, w4_visitors, w5_members, w5_visitors, indicador_final
+  w4_members, w4_visitors, w5_members, w5_visitors
 )
 values (
   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1', 2026, 6, 12,
   1, 0, false, 0,
-  0, 0, 'vermelha', false,
-  10, 2, 8, 1, 11, 0, 9, 2, 10, 1, 2
+  'vermelha', false,
+  10, 2, 8, 1, 11, 0, 9, 2, 10, 1
 );

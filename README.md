@@ -127,10 +127,36 @@ A idade não é gravada. A view `children_with_age` calcula `age_years` e respei
 - Ser admin não abre a árvore da outra discipuladora. O admin só cria o primeiro acesso e pode vincular uma pastora.
 - `pastor_id` em pessoas e células pode ficar nulo. A visibilidade usa `supervisor_id`.
 
+## Fechamento e ficha
+
+No fim de cada linha do mês:
+
+- **M** (`members_average`): média dos membros presentes nas semanas preenchidas.
+- **%** (`attendance_percent`): essa média dividida pelo total de membros da célula.
+- **V** (`visitors_average`): média dos visitantes nas semanas preenchidas.
+
+`mae_convertida` e `pai_convertido` ficam em cada criança. O fechamento pode somar quantas têm mãe ou pai convertido (`internal.contagem_pais_convertidos`).
+
+O tipo da célula é `kids` (Kids), `juvenis` (Juvenis) ou `mista_juvenis` (Mista com Juvenis, o "C Mista J" da planilha).
+
+## Identidade
+
+O logo oficial está em `public/brand/logo-radicais-kids.png` (personagem e a palavra KIDS). O recorte só do personagem, usado no cabeçalho e nos ícones, está em `public/brand/logo-radicais-kids-mark.png`.
+
+Paleta amostrada do arquivo, com contraste AA no texto e nos botões:
+
+| Papel | Cor |
+| --- | --- |
+| Texto | `#3E145C` |
+| Botão e roxo do contorno | `#682A86` |
+| Amarelo | `#FFC50F` |
+| Teal do olho e do D | `#0098B5` |
+| Magenta do sorriso e do I | `#C31A77` |
+| Fundo | `#FFF8EE` |
+
+O amarelo e o teal claro ficam em destaque e no logo. Texto pequeno usa o roxo, que passa de 8:1 sobre o branco.
+
 ## Decisões em aberto
 
-- A cor da célula (verde, azul, vermelha, bege) é um campo gravado. A regra que a define ainda não existe.
-- A planilha tem um inteiro estreito ao lado do percentual. Ele está em `monthly_reports.indicador_final` até confirmarmos o que significa.
-- "C Mista J" da planilha foi mapeado para o tipo `mista`. O resumo da planilha só separa crianças, juvenis e mistas.
-- Mãe convertida e pai convertido estão como contagem do mês, porque a planilha mostra números.
+- A cor da célula (verde, azul, vermelha, bege) continua só um campo gravado. Ainda não há faixas nem regra.
 - Falta só conta se alguém registrar a ausência. A tela de chamada, que pode marcar o restante como falta, vem depois.

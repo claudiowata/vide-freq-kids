@@ -7,8 +7,8 @@ export default function FrequenciaPage() {
     <ModuleCard eyebrow="Reunião" title="Registrar frequência">
       <p>
         A chamada da célula — presença das crianças e dos visitantes — será marcada
-        aqui. Quatro presenças seguidas tornam a criança membro; quatro faltas
-        seguidas devolvem o membro a visitante.
+        aqui.         Quatro presenças seguidas na célula tornam a criança membro; quatro faltas
+        seguidas na célula devolvem o membro a visitante. O culto não entra nessa conta.
       </p>
     </ModuleCard>
   )

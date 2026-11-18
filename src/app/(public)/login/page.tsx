@@ -28,18 +28,14 @@ async function LoginScreen({
 
   return (
     <main className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center px-4 py-12">
-      <div className="rounded-3xl bg-white p-6 shadow-[0_16px_50px_rgba(15,118,110,0.08)] ring-1 ring-teal-900/5 sm:p-8">
-        <div className="flex items-center gap-3">
-          <Logo />
-          <div>
-            <p className="font-serif text-xl text-[#134e4a]">Vide Freq Kids</p>
-            <p className="text-xs text-teal-900/65">
-              Igreja Videira Barra Funda · Radicais Kids
-            </p>
-          </div>
+      <div className="rounded-3xl bg-white p-6 shadow-[0_16px_50px_rgba(92,46,145,0.10)] ring-1 ring-primary/10 sm:p-8">
+        <div className="flex flex-col items-center text-center">
+          <Logo variant="full" className="h-44" />
+          <p className="mt-2 font-serif text-xl text-ink">Vide Freq Kids</p>
+          <p className="text-xs text-ink/65">Igreja Videira Barra Funda</p>
         </div>
-        <h1 className="mt-6 font-serif text-3xl text-[#134e4a]">Entrar</h1>
-        <p className="mt-2 text-sm leading-6 text-teal-950/70">
+        <h1 className="mt-6 font-serif text-3xl text-ink">Entrar</h1>
+        <p className="mt-2 text-sm leading-6 text-ink/75">
           Frequência e fechamento das células de crianças e juvenis. As contas são
           criadas pela liderança.
         </p>
@@ -60,9 +56,9 @@ async function LoginScreen({
         ) : null}
         {setupError ? <p className="mt-4 text-sm text-rose-800">{setupError}</p> : null}
         {needsSetup ? (
-          <p className="mt-6 text-sm text-teal-950/80">
+          <p className="mt-6 text-sm text-ink/80">
             A rede ainda não tem ninguém cadastrado.{" "}
-            <Link href="/setup" className="font-semibold text-[#0f766e] underline">
+            <Link href="/setup" className="font-semibold text-primary underline">
               Criar a primeira discipuladora
             </Link>
             .
@@ -81,7 +77,7 @@ export default function LoginPage({
   return (
     <Suspense
       fallback={
-        <main className="mx-auto flex min-h-full max-w-md items-center px-4 text-sm text-teal-900/70">
+        <main className="mx-auto flex min-h-full max-w-md items-center px-4 text-sm text-ink/70">
           Abrindo o acesso…
         </main>
       }

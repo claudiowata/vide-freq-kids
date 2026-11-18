@@ -110,6 +110,21 @@ describe("status da criança", () => {
     ])
   })
 
+  it("presença ou falta no culto não muda a sequência da célula", () => {
+    const marks: AttendanceMark[] = [
+      { meetingDate: "2026-06-01", present: true, kind: "celula", sequence: 0 },
+      { meetingDate: "2026-06-02", present: false, kind: "culto", sequence: 0 },
+      { meetingDate: "2026-06-03", present: true, kind: "celula", sequence: 0 },
+      { meetingDate: "2026-06-04", present: false, kind: "culto", sequence: 0 },
+      { meetingDate: "2026-06-05", present: true, kind: "celula", sequence: 0 },
+      { meetingDate: "2026-06-06", present: true, kind: "celula", sequence: 0 },
+    ]
+    const result = replayAttendance(marks)
+    expect(result.snapshot.status).toBe("membro")
+    expect(result.snapshot.presenceStreak).toBe(4)
+    expect(result.snapshot.absenceStreak).toBe(0)
+  })
+
   it("ignora culto no meio da sequência", () => {
     const marks = cellDays("PPP")
     marks.splice(2, 0, {

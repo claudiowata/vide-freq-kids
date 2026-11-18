@@ -1,16 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4fbf8;
-  --foreground: #134e4a;
+  --background: #fff8ee;
+  --foreground: #3e145c;
   --card: #ffffff;
-  --primary: #0f766e;
+  --primary: #682a86;
   --primary-foreground: #ffffff;
-  --muted: #e7f4f1;
-  --muted-foreground: #3f6f6a;
-  --border: #d5ebe6;
-  --input: #d5ebe6;
-  --ring: #0f766e;
+  --muted: #f6efe4;
+  --muted-foreground: #5c4578;
+  --border: #eadff2;
+  --input: #e6d5ef;
+  --ring: #682a86;
+  --ink: #3e145c;
+  --sun: #ffc50f;
+  --sky: #0098b5;
+  --pink: #c31a77;
 }
 
 @theme inline {
@@ -26,16 +30,20 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-brand: #0f766e;
-  --color-brand-ink: #134e4a;
+  --color-ink: var(--ink);
+  --color-sun: var(--sun);
+  --color-sky: var(--sky);
+  --color-pink: var(--pink);
+  --color-brand: #682a86;
+  --color-brand-ink: #3e145c;
 }
 
 body {
   min-height: 100%;
   background:
-    radial-gradient(1100px 480px at 0% -10%, #d7f3ec 0%, transparent 60%),
-    radial-gradient(900px 420px at 100% 0%, #e9f8f4 0%, transparent 55%),
-    linear-gradient(180deg, #eef8f5 0%, #f7fffc 42%, #ffffff 100%);
+    radial-gradient(1000px 460px at 0% -8%, #ffe38a 0%, transparent 55%),
+    radial-gradient(820px 420px at 100% 0%, #f8d7ea 0%, transparent 50%),
+    linear-gradient(180deg, #fff8ee 0%, #fffdf8 46%, #ffffff 100%);
   color: var(--foreground);
   font-family: var(--font-sans);
 }
