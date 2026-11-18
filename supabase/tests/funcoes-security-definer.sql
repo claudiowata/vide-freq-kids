@@ -1,6 +1,36 @@
 -- Anon não executa SECURITY DEFINER, exceto needs_initial_setup.
 \set ON_ERROR_STOP on
 
+-- Acentos regravados depois da aplicação com UTF-8 duplicado.
+do $$
+declare
+  texto text;
+begin
+  select pg_get_functiondef('public.vincular_pastor(uuid, uuid)'::regprocedure) into texto;
+  if texto not like '%sem permissão para vincular%' or texto like '%Ã%' then
+    raise exception 'vincular_pastor ainda está com acento quebrado';
+  end if;
+  if not has_function_privilege('authenticated', 'public.vincular_pastor(uuid, uuid)', 'execute')
+     or has_function_privilege('anon', 'public.vincular_pastor(uuid, uuid)', 'execute') then
+    raise exception 'permissão de vincular_pastor mudou ao corrigir o texto';
+  end if;
+
+  select obj_description('public.cells'::regclass) into texto;
+  if texto not like '%Célula%' or texto like '%Ã%' then
+    raise exception 'comentário de cells ainda está quebrado: %', texto;
+  end if;
+  select col_description('public.children'::regclass, attnum) into texto
+  from pg_attribute
+  where attrelid = 'public.children'::regclass and attname = 'mae_convertida';
+  if texto not like '%mãe%' or texto like '%Ã%' then
+    raise exception 'comentário de mae_convertida ainda está quebrado: %', texto;
+  end if;
+  select obj_description('public.children_with_age'::regclass) into texto;
+  if texto not like '%não furar%' or texto like '%Ã%' then
+    raise exception 'comentário da view ainda está quebrado: %', texto;
+  end if;
+end $$;
+
 do $$
 declare
   fn record;
