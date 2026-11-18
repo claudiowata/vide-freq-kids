@@ -82,3 +82,34 @@ describe("pastora ligada depois, sem reescrever a célula", () => {
     expect(canSeeCell([...withoutPastor, olga], "olga", cellEdu)).toBe(false)
   })
 })
+
+describe("discipuladora subordinada", () => {
+  const bia: PersonNode = { id: "bia", role: "discipulador", supervisorId: "ana" }
+  const hugo: PersonNode = { id: "hugo", role: "lider", supervisorId: "bia" }
+  const nested: PersonNode[] = [...withoutPastor, bia, hugo]
+  const cellHugo: CellNode = {
+    id: "celula-hugo",
+    leaderId: "hugo",
+    discipuladorId: "bia",
+    pastorId: null,
+  }
+
+  it("a discipuladora de cima lê a subárvore, e o outro ramo continua de fora", () => {
+    expect(canSeePerson(nested, "ana", "bia")).toBe(true)
+    expect(canSeePerson(nested, "ana", "hugo")).toBe(true)
+    expect(canSeeCell(nested, "ana", cellHugo)).toBe(true)
+    expect(canSeeCell(nested, "ana", cellEdu)).toBe(false)
+    expect(canSeePerson(nested, "diana", "bia")).toBe(false)
+    expect(canSeePerson(nested, "diana", "hugo")).toBe(false)
+    expect(canSeeCell(nested, "diana", cellHugo)).toBe(false)
+  })
+
+  it("o líder e a discipuladora subordinada não leem célula alheia", () => {
+    expect(canSeeCell(nested, "bruno", cellHugo)).toBe(false)
+    expect(canSeeCell(nested, "hugo", cellBruno)).toBe(false)
+    expect(canSeeCell(nested, "hugo", cellHugo)).toBe(true)
+    expect(canSeeCell(nested, "bia", cellHugo)).toBe(true)
+    expect(canSeeCell(nested, "bia", cellBruno)).toBe(false)
+    expect(canSeePerson(nested, "bruno", "hugo")).toBe(false)
+  })
+})

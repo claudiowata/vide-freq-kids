@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useActionState } from "react"
 import { signIn, type FormState } from "./actions"
 import { Button } from "@/components/ui/button"
@@ -26,6 +27,14 @@ export function LoginForm() {
           autoComplete="current-password"
           required
         />
+      </div>
+      <div className="flex justify-end">
+        <Link
+          href="/esqueci-senha"
+          className="inline-flex min-h-11 items-center text-sm font-semibold text-primary"
+        >
+          Esqueci minha senha
+        </Link>
       </div>
       {state.error ? (
         <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-800" role="alert">

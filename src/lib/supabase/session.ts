@@ -1,13 +1,18 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 import { getPublicSupabaseEnv } from "@/lib/env"
+import { RECOVERY_COOKIE } from "@/lib/recovery-cookie"
+import { decideAccess } from "@/lib/supabase/access"
 
-const PUBLIC_PATHS = new Set(["/login", "/setup"])
-
-function redirectTo(request: NextRequest, pathname: string, source: NextResponse) {
+function redirectTo(
+  request: NextRequest,
+  pathname: string,
+  source: NextResponse,
+  search = "",
+) {
   const url = request.nextUrl.clone()
   url.pathname = pathname
-  url.search = ""
+  url.search = search
   const redirect = NextResponse.redirect(url)
   source.cookies.getAll().forEach((cookie) => {
     redirect.cookies.set(cookie)
@@ -18,11 +23,19 @@ function redirectTo(request: NextRequest, pathname: string, source: NextResponse
 export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname
   const env = getPublicSupabaseEnv()
+  const hasRecoveryCookie = request.cookies.get(RECOVERY_COOKIE)?.value === "1"
 
   if (!env) {
-    if (PUBLIC_PATHS.has(path)) return NextResponse.next({ request })
+    const decision = decideAccess({
+      path,
+      hasUser: false,
+      mustChangePassword: false,
+      hasRecoveryCookie,
+    })
+    if (decision.action === "allow") return NextResponse.next({ request })
     const url = request.nextUrl.clone()
-    url.pathname = "/login"
+    url.pathname = decision.pathname
+    url.search = decision.search ?? ""
     return NextResponse.redirect(url)
   }
 
@@ -48,19 +61,15 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const mustChange = user?.app_metadata?.must_change_password === true
-  const isPublic = PUBLIC_PATHS.has(path)
+  const decision = decideAccess({
+    path,
+    hasUser: Boolean(user),
+    mustChangePassword: user?.app_metadata?.must_change_password === true,
+    hasRecoveryCookie,
+  })
 
-  if (!user && !isPublic) {
-    return redirectTo(request, "/login", response)
-  }
-
-  if (user && mustChange && path !== "/trocar-senha") {
-    return redirectTo(request, "/trocar-senha", response)
-  }
-
-  if (user && !mustChange && (isPublic || path === "/trocar-senha")) {
-    return redirectTo(request, "/", response)
+  if (decision.action === "redirect") {
+    return redirectTo(request, decision.pathname, response, decision.search ?? "")
   }
 
   return response

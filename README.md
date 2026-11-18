@@ -8,6 +8,7 @@ Esta unidade é a base: visual, login, banco e a regra de visitante/membro. As t
 
 - Visual em verde-água, cartões brancos e a barra inferior com Início, Frequência, Fechamento, Acompanhar e Cadastro.
 - Login por e-mail e senha. Não há cadastro público.
+- Quem esquece a senha pede um link em `/esqueci-senha` e define outra em `/redefinir-senha`.
 - Contas criadas pela liderança, com senha provisória e troca obrigatória no primeiro acesso.
 - A rede pode existir **sem pastora**. A primeira discipuladora nasce como raiz e admin.
 - Uma pastora pode ser colocada acima das discipuladoras que já existem, sem reescrever células, crianças ou relatórios.
@@ -83,6 +84,54 @@ supabase db push
 
 No painel do projeto, em Authentication → Providers → Email, desligue os novos cadastros. O `enable_signup = false` do `config.toml` vale para o CLI local; o push do banco não altera essa chave do Auth.
 
+## Recuperação de senha no painel
+
+O app pede o e-mail em `/esqueci-senha` e chama `resetPasswordForEmail` com retorno em `/auth/callback?next=/redefinir-senha`. O callback troca o `code` (PKCE) pela sessão, ou o `token_hash` com `type=recovery`, e só então abre `/redefinir-senha`. Nada disso entra no repositório como chave secreta.
+
+O projeto remoto ainda não tem um site Netlify publicado. Use a origem real do site no Netlify, sem barra no final, no lugar de `https://SEU-SITE.netlify.app`.
+
+Em Authentication → URL Configuration:
+
+| Campo | Valor |
+| --- | --- |
+| Site URL | `https://SEU-SITE.netlify.app` |
+| Redirect URLs | `https://SEU-SITE.netlify.app/**` |
+| Redirect URLs | `http://127.0.0.1:3847/**` |
+| Redirect URLs | `http://localhost:3847/**` |
+
+O `redirectTo` leva query (`next` e, no fluxo PKCE, `sb_flow_id`). O curinga `/**` cobre o caminho `/auth/callback` e essa query. Se o projeto só aceitar URL exata, acrescente também:
+
+- `https://SEU-SITE.netlify.app/auth/callback`
+- `http://127.0.0.1:3847/auth/callback`
+- `http://localhost:3847/auth/callback`
+
+Salve. Sem essas URLs o Supabase ignora o retorno do app e o link do e-mail não abre a tela de nova senha.
+
+Em Authentication → Emails (ou Email Templates) → Reset Password, assunto:
+
+```
+Redefinir a senha do Vide Freq Kids
+```
+
+Corpo, em HTML:
+
+```html
+<h2>Redefinir senha</h2>
+<p>Recebemos um pedido para criar uma nova senha no Vide Freq Kids.</p>
+<p><a href="{{ .ConfirmationURL }}">Criar uma nova senha</a></p>
+<p>Se você não pediu isso, ignore este e-mail. O link vale por 1 hora e só pode ser usado uma vez.</p>
+```
+
+`{{ .ConfirmationURL }}` é o fluxo PKCE: o Supabase devolve o navegador para `/auth/callback` com `code`. O mesmo arquivo está em `supabase/templates/recovery.html` para o Supabase local.
+
+Se o template for o formato `token_hash`, o app também aceita. O link precisa apontar para o callback com `type=recovery`:
+
+```html
+<p><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=recovery&next=/redefinir-senha">Criar uma nova senha</a></p>
+```
+
+Nesse caso a Site URL tem de ser a origem do app (Netlify ou `http://127.0.0.1:3847`), sem barra no final.
+
 A chave secreta fica só no `.env.local` (e, em produção, no ambiente do servidor). Não entra no repositório.
 
 O projeto remoto expõe tabelas novas na Data API e não liga RLS sozinho. Cada tabela da migração habilita RLS, força RLS e cria políticas no mesmo arquivo. O `anon` não tem política: mesmo exposto, não lê nem grava.
@@ -119,13 +168,18 @@ A idade não é gravada. A view `children_with_age` calcula `age_years` e respei
 
 ## Hierarquia
 
-`pastor` → `discipulador` → `lider`. O elo da pastora é opcional.
+`pastor` → `discipulador` → `lider`. Uma discipuladora também pode ficar abaixo de outra discipuladora. O elo da pastora é opcional.
 
 - Discipuladora com `supervisor_id` nulo é raiz.
 - Líder sempre aponta para uma discipuladora.
 - Cada um vê a si, quem está abaixo e o caminho até a raiz. Não vê a árvore ao lado.
+- Discipuladora, a raiz dessa árvore e quem está acima (a pastora, quando existe) têm leitura de todo o cadastro das células abaixo. Entram a ficha da célula, os líderes, as crianças com responsáveis, telefones, mãe e pai convertidos e status, a frequência e os fechamentos. A subárvore de uma discipuladora subordinada entra nessa leitura.
+- Líder de célula vê só a própria célula: não vê a célula ao lado nem a de uma discipuladora subordinada.
+- Discipuladora de outro ramo não vê essa árvore.
 - Ser admin não abre a árvore da outra discipuladora. O admin só cria o primeiro acesso e pode vincular uma pastora.
 - `pastor_id` em pessoas e células pode ficar nulo. A visibilidade usa `supervisor_id`.
+
+A hierarquia que aceita discipuladora subordinada está em `supabase/migrations/20261118180000_acesso_leitura_discipuladora.sql`. As políticas de leitura da foundation já percorrem `supervisor_id`; essa migration não as substitui. O teste de RLS está em `supabase/tests/acesso-discipuladora.sql`.
 
 ## Multiplicação de célula
 
