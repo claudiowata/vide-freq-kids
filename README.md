@@ -71,6 +71,8 @@ supabase status       # URL, anon/publishable e service_role
 
 O primeiro acesso da rede, com o banco vazio (sem o seed), fica em `/setup`: cria a discipuladora raiz, sem pastora. Isso exige `SUPABASE_SECRET_KEY`.
 
+`public.needs_initial_setup()` é `SECURITY DEFINER` e continua executável pelo papel `anon`. `/login` e `/setup` a chamam antes de existir sessão; a função só responde se ainda não há nenhuma conta. As outras funções `SECURITY DEFINER` não são do `anon`. `vincular_pastor` exige `auth.uid()` e só segue se essa pessoa é admin, a pastora informada ou a própria discipuladora. `multiplicar_celula` e `remanejar_criancas` também exigem sessão e a subárvore. A migration `supabase/migrations/20261118200000_revoke_anon_security_definer.sql` varre as funções que já existem. `supabase/migrations/20261118215000_revoke_anon_funcoes_guarda.sql` repete a varredura depois da guarda compartilhada, para incluir `internal.attendance_require_shared_custody` e a `recompute_child_status` reescrita nessa migration.
+
 ## Aplicar no projeto remoto
 
 As migrações **não** foram enviadas daqui. Quem aplica é você, depois de revisar:
