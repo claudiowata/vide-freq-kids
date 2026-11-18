@@ -196,7 +196,7 @@ As crianças marcadas vão para a célula nova com status, presenças e faltas s
 
 Cada mudança fica em `child_transfers` (criança, de, para, data, quem fez). Líder não multiplica nem remaneja, e uma discipuladora não mexe em célula de outro ramo. As funções `multiplicar_celula` e `remanejar_criancas` fazem a checagem e a gravação na mesma transação. Um update direto de `children.cell_id` é recusado.
 
-A migration é `supabase/migrations/20261118190000_multiplicacao_celula.sql`. O teste de RLS está em `supabase/tests/multiplicacao-celula.sql`.
+A migration é `supabase/migrations/20261118190000_multiplicacao_celula.sql`. O dia da semana chega como `integer` de 0 a 6 (`supabase/migrations/20261118230000_multiplicar_celula_dia_integer.sql`), o mesmo número que o app envia na RPC. O teste de RLS está em `supabase/tests/multiplicacao-celula.sql`.
 
 ## Fechamento e ficha
 

@@ -97,6 +97,24 @@ export function validateMultiplication(draft: MultiplicationDraft): string | nul
   return null
 }
 
+/** Argumentos nomeados de `public.multiplicar_celula`. `p_dia` sai como número, o integer que o PostgREST resolve. */
+export function multiplicationRpcArgs(origem: string, draft: MultiplicationDraft) {
+  if (draft.weekday === null || !Number.isInteger(draft.weekday)) {
+    throw new Error("Escolha o dia da célula.")
+  }
+  return {
+    p_origem: origem,
+    p_nome: draft.name.trim(),
+    p_tipo: draft.cellType,
+    p_lider: draft.leaderId,
+    p_dia: draft.weekday,
+    p_horario: draft.meetingTime,
+    p_endereco: draft.address.trim(),
+    p_data: draft.multipliedOn,
+    p_criancas: [...draft.childIds],
+  }
+}
+
 export function statusLabel(status: "membro" | "visitante"): string {
   return status === "membro" ? "Membro" : "Visitante"
 }

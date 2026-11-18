@@ -1,7 +1,7 @@
 "use server"
 
 import { redirect } from "next/navigation"
-import { validateMultiplication } from "@/domain/cell-multiplication"
+import { multiplicationRpcArgs, validateMultiplication } from "@/domain/cell-multiplication"
 import { createClient } from "@/lib/supabase/server"
 
 export interface FormState {
@@ -34,17 +34,7 @@ export async function multiplyCell(_state: FormState, formData: FormData): Promi
   if (!origem) return { error: "Escolha a célula de origem." }
 
   const supabase = await createClient()
-  const { error } = await supabase.rpc("multiplicar_celula", {
-    p_origem: origem,
-    p_nome: draft.name.trim(),
-    p_tipo: draft.cellType,
-    p_lider: draft.leaderId,
-    p_dia: draft.weekday,
-    p_horario: draft.meetingTime,
-    p_endereco: draft.address.trim(),
-    p_data: draft.multipliedOn,
-    p_criancas: childIds,
-  })
+  const { error } = await supabase.rpc("multiplicar_celula", multiplicationRpcArgs(origem, draft))
   if (error) return { error: readable(error.message) }
   redirect("/cadastro?aviso=multiplicada")
 }
