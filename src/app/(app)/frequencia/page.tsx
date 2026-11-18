@@ -21,15 +21,16 @@ async function FrequenciaScreen({
     <div className="grid gap-4">
       {aviso === "salva" ? (
         <p className="rounded-xl bg-[#F4ECFB] px-3 py-2 text-sm text-ink" role="status">
-          Chamada salva. O status foi recalculado.
+          Chamada salva. O status deste mês não muda até o fechamento.
         </p>
       ) : null}
       <ModuleCard eyebrow="Reunião" title="Registrar frequência">
         <p>
-          Quatro presenças seguidas na célula tornam a criança membro. Oito faltas seguidas
-          devolvem o membro a visitante. O culto não entra. Quem tem guarda compartilhada
-          pode marcar a semana com o outro responsável: essa semana não conta como presença
-          nem como falta e não quebra a sequência.
+          Quatro presenças seguidas na célula tornam a criança membro e oito faltas
+          seguidas devolvem o membro a visitante, mas o status gravado só muda na virada
+          do mês. A sequência atravessa meses. O culto não entra. Quem tem guarda
+          compartilhada pode marcar a semana com o outro responsável: essa semana não
+          conta como presença nem como falta e não quebra a sequência.
         </p>
         <CallForm
           cells={data.cells.map((cell) => ({ id: cell.id, name: cell.name }))}

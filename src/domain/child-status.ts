@@ -7,6 +7,8 @@
  * - Toda criança começa visitante.
  * - 4 presenças consecutivas em encontros de célula tornam a criança membro.
  * - 8 ausências consecutivas em encontros de célula devolvem o membro a visitante.
+ * - O status gravado só muda na virada do mês. A sequência atravessa meses,
+ *   mas presença lançada no mês aberto não altera o status.
  * - Presença zera a sequência de ausências; ausência zera a de presenças.
  * - "Semana com o outro responsável" é neutra: não é presença nem falta e não
  *   mexe nas sequências. Só existe para criança com guarda compartilhada.
@@ -115,4 +117,113 @@ export function replayAttendance(marks: AttendanceMark[]): {
   }
 
   return { snapshot, history }
+}
+
+export function endOfMonth(isoDate: string): string {
+  const [year, month] = isoDate.split("-").map(Number)
+  const last = new Date(Date.UTC(year, month, 0))
+  return last.toISOString().slice(0, 10)
+}
+
+export function previousMonthEnd(isoDate: string): string {
+  const [year, month] = isoDate.split("-").map(Number)
+  const last = new Date(Date.UTC(year, month - 1, 0))
+  return last.toISOString().slice(0, 10)
+}
+
+function nextMonthEnd(monthEnd: string): string {
+  const [year, month] = monthEnd.split("-").map(Number)
+  const last = new Date(Date.UTC(year, month + 1, 0))
+  return last.toISOString().slice(0, 10)
+}
+
+/** Status oficial se o mês fosse fechado em `through`, olhando só a chamada até essa data. */
+export function statusThrough(
+  marks: AttendanceMark[],
+  through: string,
+): { status: ChildStatus; history: StatusChange[] } {
+  const relevant = marks.filter(
+    (mark) => mark.meetingDate <= through && (mark.kind ?? "celula") === "celula",
+  )
+  if (relevant.length === 0) return { status: "visitante", history: [] }
+
+  const first = relevant.reduce((earliest, mark) =>
+    mark.meetingDate < earliest ? mark.meetingDate : earliest,
+  relevant[0].meetingDate)
+  let status: ChildStatus = "visitante"
+  const history: StatusChange[] = []
+  for (let monthEnd = endOfMonth(first); monthEnd <= through; monthEnd = nextMonthEnd(monthEnd)) {
+    const closed = replayAttendance(relevant.filter((mark) => mark.meetingDate <= monthEnd))
+    if (closed.snapshot.status === status) continue
+    history.push({
+      from: status,
+      to: closed.snapshot.status,
+      on: monthEnd,
+      reason:
+        closed.snapshot.status === "membro"
+          ? "quatro_presencas_consecutivas"
+          : "oito_ausencias_consecutivas",
+    })
+    status = closed.snapshot.status
+  }
+  return { status, history }
+}
+
+/**
+ * Fecha o status até `closeThrough` sem voltar um mês já avaliado.
+ * Repetir a mesma data com os mesmos dados não gera outro histórico.
+ * As sequências incluem o mês aberto; o status, não.
+ */
+export function closeStatus(input: {
+  marks: AttendanceMark[]
+  storedStatus: ChildStatus
+  evaluatedThrough: string | null
+  closeThrough: string
+}): {
+  status: ChildStatus
+  evaluatedThrough: string
+  presenceStreak: number
+  absenceStreak: number
+  history: StatusChange[]
+} {
+  const horizon =
+    input.evaluatedThrough && input.evaluatedThrough > input.closeThrough
+      ? input.evaluatedThrough
+      : input.closeThrough
+  const closed = statusThrough(input.marks, horizon)
+  const live = replayAttendance(input.marks)
+  return {
+    status: closed.status,
+    evaluatedThrough: horizon,
+    presenceStreak: live.snapshot.presenceStreak,
+    absenceStreak: live.snapshot.absenceStreak,
+    history: closed.history,
+  }
+}
+
+/** Efeito de lançar chamada hoje: fecha só o mês anterior, se ainda não foi. */
+export function effectOfRecordingAttendance(input: {
+  marks: AttendanceMark[]
+  storedStatus: ChildStatus
+  evaluatedThrough: string | null
+  today: string
+}): {
+  status: ChildStatus
+  evaluatedThrough: string
+  presenceStreak: number
+  absenceStreak: number
+} {
+  const cutoff = previousMonthEnd(input.today)
+  const closed = closeStatus({
+    marks: input.marks,
+    storedStatus: input.storedStatus,
+    evaluatedThrough: input.evaluatedThrough,
+    closeThrough: input.evaluatedThrough && input.evaluatedThrough >= cutoff ? input.evaluatedThrough : cutoff,
+  })
+  return {
+    status: closed.status,
+    evaluatedThrough: closed.evaluatedThrough,
+    presenceStreak: closed.presenceStreak,
+    absenceStreak: closed.absenceStreak,
+  }
 }

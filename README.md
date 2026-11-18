@@ -167,7 +167,7 @@ Guarda compartilhada fica no cadastro da criança (`guarda_compartilhada`, rótu
 
 No fechamento, M, % e V ignoram a semana que só tem essa marca neutra: ela não entra como falta nem como semana zerada. Uma falta registrada continua abaixando a média de membros presentes.
 
-O histórico fica em `child_status_history`. A volta a visitante grava `oito_ausencias_consecutivas`. A função `internal.recompute_child_status` refaz o cálculo quando a chamada muda, inclusive para as crianças que já estavam gravadas. O mesmo algoritmo está em `src/domain/child-status.ts`, coberto por teste. A migration é `supabase/migrations/20261118210000_status_guarda_compartilhada.sql`.
+A guarda compartilhada e a volta com 8 faltas estão em `supabase/migrations/20261118210000_status_guarda_compartilhada.sql`. O status gravado só muda na virada do mês. Lançar frequência no mês aberto atualiza as sequências e não o status. No fechamento, ou na primeira avaliação de um mês novo, a sequência é lida até o fim do mês anterior — e ela atravessa meses. `children.status_avaliado_ate` guarda esse fim de mês: fechar de novo o mesmo período, com a mesma chamada, não altera o resultado, e fechar um mês anterior não volta o horizonte. A volta a visitante grava `oito_ausencias_consecutivas`. O algoritmo está em `src/domain/child-status.ts` e em `public.fechar_status_do_mes`. A migration da virada é `supabase/migrations/20261118220000_status_virada_mes.sql`.
 
 A idade não é gravada. A view `children_with_age` calcula `age_years` e respeita o RLS.
 
