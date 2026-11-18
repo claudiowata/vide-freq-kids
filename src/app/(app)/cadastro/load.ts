@@ -28,6 +28,7 @@ export interface ChildOption {
   motherConverted: boolean | null
   fatherConverted: boolean | null
   guardians: string | null
+  sharedCustody: boolean
 }
 
 export interface TransferRow {
@@ -54,7 +55,7 @@ export async function loadCadastro() {
     supabase
       .from("children")
       .select(
-        "id, cell_id, full_name, status, presence_streak, absence_streak, mae_convertida, pai_convertido, guardians",
+        "id, cell_id, full_name, status, presence_streak, absence_streak, mae_convertida, pai_convertido, guardians, guarda_compartilhada",
       )
       .order("full_name"),
     supabase
@@ -99,6 +100,7 @@ export async function loadCadastro() {
         motherConverted: row.mae_convertida,
         fatherConverted: row.pai_convertido,
         guardians: row.guardians,
+        sharedCustody: row.guarda_compartilhada === true,
       },
     ]
   })

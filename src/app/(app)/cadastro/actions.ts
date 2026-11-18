@@ -49,6 +49,23 @@ export async function multiplyCell(_state: FormState, formData: FormData): Promi
   redirect("/cadastro?aviso=multiplicada")
 }
 
+export async function saveSharedCustody(
+  _state: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const childId = String(formData.get("childId") ?? "")
+  const shared = formData.get("guarda") === "on"
+  if (!childId) return { error: "Criança não encontrada." }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("children")
+    .update({ guarda_compartilhada: shared })
+    .eq("id", childId)
+  if (error) return { error: readable(error.message) }
+  redirect("/cadastro?aviso=guarda")
+}
+
 export async function reassignChildren(
   _state: FormState,
   formData: FormData,

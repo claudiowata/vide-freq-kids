@@ -1,23 +1,26 @@
 /**
  * Regra de visitante/membro da Célula Kids e Juvenis.
  *
- * Espelha `internal.recompute_child_status` na migração. Se um lado mudar,
- * o outro e os testes precisam mudar junto.
+ * Espelha `internal.recompute_child_status`. Se um lado mudar, o outro e os
+ * testes precisam mudar junto.
  *
  * - Toda criança começa visitante.
  * - 4 presenças consecutivas em encontros de célula tornam a criança membro.
- * - 4 ausências consecutivas em encontros de célula devolvem o membro a visitante.
+ * - 8 ausências consecutivas em encontros de célula devolvem o membro a visitante.
  * - Presença zera a sequência de ausências; ausência zera a de presenças.
+ * - "Semana com o outro responsável" é neutra: não é presença nem falta e não
+ *   mexe nas sequências. Só existe para criança com guarda compartilhada.
  * - Culto não entra na conta.
  * - Linha ausente não é ausência: só conta o que foi registrado.
  * - A primeira visita é a data da primeira presença e não muda depois.
  */
 
 export const PRESENCES_TO_BECOME_MEMBER = 4
-export const ABSENCES_TO_RETURN_TO_VISITOR = 4
+export const ABSENCES_TO_RETURN_TO_VISITOR = 8
 
 export type ChildStatus = "visitante" | "membro"
 export type MeetingKind = "celula" | "culto"
+export type AttendanceChoice = "presente" | "falta" | "outro_responsavel"
 
 export interface StatusSnapshot {
   status: ChildStatus
@@ -30,15 +33,22 @@ export interface StatusChange {
   from: ChildStatus
   to: ChildStatus
   on: string
-  reason: "quatro_presencas_consecutivas" | "quatro_ausencias_consecutivas"
+  reason: "quatro_presencas_consecutivas" | "oito_ausencias_consecutivas"
 }
 
 export interface AttendanceMark {
   meetingDate: string
-  present: boolean
+  /** Mantido para marcas antigas. `choice` tem prioridade. */
+  present?: boolean
+  choice?: AttendanceChoice
   kind?: MeetingKind
   /** Desempate no mesmo dia, na ordem de gravação. */
   sequence?: number
+}
+
+export function attendanceChoice(mark: AttendanceMark): AttendanceChoice {
+  if (mark.choice) return mark.choice
+  return mark.present ? "presente" : "falta"
 }
 
 export function initialStatus(): StatusSnapshot {
@@ -66,9 +76,11 @@ export function replayAttendance(marks: AttendanceMark[]): {
 
   for (const mark of ordered) {
     if ((mark.kind ?? "celula") !== "celula") continue
+    const choice = attendanceChoice(mark)
+    if (choice === "outro_responsavel") continue
 
     const previous = snapshot.status
-    if (mark.present) {
+    if (choice === "presente") {
       if (!snapshot.firstVisitOn) snapshot.firstVisitOn = mark.meetingDate
       snapshot.presenceStreak += 1
       snapshot.absenceStreak = 0
@@ -97,7 +109,7 @@ export function replayAttendance(marks: AttendanceMark[]): {
         reason:
           snapshot.status === "membro"
             ? "quatro_presencas_consecutivas"
-            : "quatro_ausencias_consecutivas",
+            : "oito_ausencias_consecutivas",
       })
     }
   }
