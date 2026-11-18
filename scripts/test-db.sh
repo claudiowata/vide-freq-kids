@@ -4,3 +4,4 @@ URL="${DATABASE_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}"
 psql "$URL" -v ON_ERROR_STOP=1 -f supabase/tests/foundation.sql
 psql "$URL" -v ON_ERROR_STOP=1 -f supabase/tests/acesso-discipuladora.sql
 psql "$URL" -v ON_ERROR_STOP=1 -f supabase/tests/multiplicacao-celula.sql
+psql "$URL" -v ON_ERROR_STOP=1 -f supabase/tests/status-guarda.sql

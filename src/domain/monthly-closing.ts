@@ -3,7 +3,10 @@
  * Espelha as colunas geradas de `monthly_reports`:
  * M = membersAverage, % = attendancePercent, V = visitorsAverage.
  * Semanas sem número (null) ficam de fora da média.
+ * Semana só com "outro responsável" também fica de fora: não é falta.
  */
+
+import type { AttendanceChoice, ChildStatus } from "@/domain/child-status"
 
 export interface WeekCounts {
   members: number | null
@@ -46,6 +49,28 @@ export function monthlyIndicators(weeks: WeekCounts[], memberCount: number): Mon
     membersAverage: average,
     attendancePercent: attendancePercent(average, memberCount),
     visitorsAverage: visitorsAverage(weeks),
+  }
+}
+
+export interface CallMark {
+  status: ChildStatus
+  choice: AttendanceChoice
+}
+
+/**
+ * Conta presentes da semana para M e V.
+ * "Outro responsável" sai da conta. Se a semana só tem essa marca, devolve null
+ * para a média ignorá-la. Falta de membro entra como semana preenchida com zero
+ * naquele nome, e por isso abaixa M.
+ */
+export function weekCountsFromCall(marks: CallMark[]): WeekCounts | null {
+  const counted = marks.filter((mark) => mark.choice !== "outro_responsavel")
+  if (counted.length === 0) return null
+  return {
+    members: counted.filter((mark) => mark.status === "membro" && mark.choice === "presente")
+      .length,
+    visitors: counted.filter((mark) => mark.status === "visitante" && mark.choice === "presente")
+      .length,
   }
 }
 

@@ -13,6 +13,7 @@ function cellDays(pattern: string, start = "2026-06-01"): AttendanceMark[] {
     return {
       meetingDate: date.toISOString().slice(0, 10),
       present: token === "P",
+      choice: token === "P" ? "presente" : token === "N" ? "outro_responsavel" : "falta",
       kind: "celula" as const,
       sequence: index,
     }
@@ -73,22 +74,22 @@ describe("status da criança", () => {
     expect(restarted.history[0]?.on).toBe("2026-06-07")
   })
 
-  it("não rebaixa o membro com 3 ausências e rebaixa na 4ª", () => {
-    const staying = replayAttendance(cellDays("PPPPAAA"))
+  it("não rebaixa o membro com 7 ausências e rebaixa na 8ª", () => {
+    const staying = replayAttendance(cellDays("PPPPAAAAAAA"))
     expect(staying.snapshot.status).toBe("membro")
     expect(staying.snapshot.presenceStreak).toBe(0)
-    expect(staying.snapshot.absenceStreak).toBe(3)
+    expect(staying.snapshot.absenceStreak).toBe(7)
 
-    const demoted = replayAttendance(cellDays("PPPPAAAA"))
+    const demoted = replayAttendance(cellDays("PPPPAAAAAAAA"))
     expect(demoted.snapshot.status).toBe("visitante")
-    expect(demoted.snapshot.absenceStreak).toBe(4)
+    expect(demoted.snapshot.absenceStreak).toBe(8)
     expect(demoted.snapshot.presenceStreak).toBe(0)
     expect(demoted.snapshot.firstVisitOn).toBe("2026-06-01")
     expect(demoted.history.map((change) => change.reason)).toEqual([
       "quatro_presencas_consecutivas",
-      "quatro_ausencias_consecutivas",
+      "oito_ausencias_consecutivas",
     ])
-    expect(demoted.history[1]?.on).toBe("2026-06-08")
+    expect(demoted.history[1]?.on).toBe("2026-06-12")
   })
 
   it("zera a sequência de ausências quando o membro comparece", () => {
@@ -100,7 +101,7 @@ describe("status da criança", () => {
   })
 
   it("depois de voltar a visitante, 4 presenças promovem de novo", () => {
-    const result = replayAttendance(cellDays("PPPPAAAAPPPP"))
+    const result = replayAttendance(cellDays("PPPPAAAAAAAAPPPP"))
     expect(result.snapshot.status).toBe("membro")
     expect(result.snapshot.presenceStreak).toBe(4)
     expect(result.history.map((change) => change.to)).toEqual([
@@ -152,6 +153,26 @@ describe("status da criança", () => {
     expect(sameDay.snapshot.status).toBe("visitante")
     expect(sameDay.snapshot.presenceStreak).toBe(3)
     expect(sameDay.snapshot.absenceStreak).toBe(0)
+  })
+
+  it("semana com o outro responsável não quebra a sequência", () => {
+    const interleaved = replayAttendance(cellDays("PNPNPNPN"))
+    expect(interleaved.snapshot.status).toBe("membro")
+    expect(interleaved.snapshot.presenceStreak).toBe(4)
+    expect(interleaved.snapshot.absenceStreak).toBe(0)
+    expect(interleaved.history).toEqual([
+      {
+        from: "visitante",
+        to: "membro",
+        on: "2026-06-07",
+        reason: "quatro_presencas_consecutivas",
+      },
+    ])
+
+    const absencesHeld = replayAttendance(cellDays("PPPPAAN"))
+    expect(absencesHeld.snapshot.status).toBe("membro")
+    expect(absencesHeld.snapshot.absenceStreak).toBe(2)
+    expect(absencesHeld.snapshot.presenceStreak).toBe(0)
   })
 
   it("não grava primeira visita em ausência, e não troca a data depois", () => {
