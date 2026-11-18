@@ -2,7 +2,7 @@
 
 Frequência e fechamento mensal das células de crianças e juvenis da rede **Radicais Kids**, na Igreja Videira Barra Funda. O app é um PWA em português, pensado primeiro para o celular, no mesmo espírito visual do VideFreq.
 
-Esta unidade é a base: visual, login, banco e a regra de visitante/membro. As telas de chamada, fechamento, acompanhamento e cadastro ainda são lugares reservados.
+Esta unidade é a base: visual, login, banco e a regra de visitante/membro. As telas de chamada, fechamento e acompanhamento ainda são lugares reservados. No cadastro já dá para multiplicar uma célula e remanejar as crianças.
 
 ## O que já funciona
 
@@ -126,6 +126,16 @@ A idade não é gravada. A view `children_with_age` calcula `age_years` e respei
 - Cada um vê a si, quem está abaixo e o caminho até a raiz. Não vê a árvore ao lado.
 - Ser admin não abre a árvore da outra discipuladora. O admin só cria o primeiro acesso e pode vincular uma pastora.
 - `pastor_id` em pessoas e células pode ficar nulo. A visibilidade usa `supervisor_id`.
+
+## Multiplicação de célula
+
+No cadastro, a discipuladora (ou quem está acima dela) abre **Multiplicar célula**. A célula nova recebe nome, tipo — Kids, Juvenis ou Mista com Juvenis (C Mista J) —, líder da mesma discipuladora, dia, horário e endereço. Ela guarda a célula mãe em `celula_origem_id` e a data em `multiplied_on`.
+
+As crianças marcadas vão para a célula nova com status, presenças e faltas seguidas e os dados dos pais. A frequência antiga permanece nos encontros da célula de origem, então o fechamento daquele mês não muda. O mesmo vale para **Remanejar crianças** entre duas células que já existem na subárvore.
+
+Cada mudança fica em `child_transfers` (criança, de, para, data, quem fez). Líder não multiplica nem remaneja, e uma discipuladora não mexe em célula de outro ramo. As funções `multiplicar_celula` e `remanejar_criancas` fazem a checagem e a gravação na mesma transação. Um update direto de `children.cell_id` é recusado.
+
+A migration é `supabase/migrations/20261118190000_multiplicacao_celula.sql`. O teste de RLS está em `supabase/tests/multiplicacao-celula.sql`.
 
 ## Fechamento e ficha
 
