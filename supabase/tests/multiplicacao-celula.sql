@@ -3,6 +3,27 @@
 
 begin;
 
+do $$
+declare
+  args text;
+  n int;
+begin
+  select count(*) into n
+  from pg_proc p
+  join pg_namespace ns on ns.oid = p.pronamespace
+  where ns.nspname = 'public' and p.proname = 'multiplicar_celula';
+  if n <> 1 then
+    raise exception 'multiplicar_celula deveria ter uma assinatura, achou %', n;
+  end if;
+  select pg_get_function_identity_arguments(p.oid) into args
+  from pg_proc p
+  join pg_namespace ns on ns.oid = p.pronamespace
+  where ns.nspname = 'public' and p.proname = 'multiplicar_celula';
+  if args not like '%p_dia integer%' or args like '%smallint%' then
+    raise exception 'p_dia deveria ser integer, assinatura: %', args;
+  end if;
+end $$;
+
 select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);
 select set_config(
   'request.jwt.claims',
@@ -51,9 +72,34 @@ begin
      or (select cell_type from public.cells where id = nova) <> 'mista_juvenis'
      or (select leader_id from public.cells where id = nova)
        <> '33333333-3333-4333-8333-333333333333'
-     or (select address from public.cells where id = nova) <> 'Rua Nova, 10' then
-    raise exception 'a célula filha não guardou mãe, data, tipo, líder ou endereço';
+     or (select address from public.cells where id = nova) <> 'Rua Nova, 10'
+     or (select weekday from public.cells where id = nova) <> 3 then
+    raise exception 'a célula filha não guardou mãe, data, tipo, líder, endereço ou dia';
   end if;
+end $$;
+
+do $$
+begin
+  perform public.multiplicar_celula(
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+    'Célula Dia Inválido',
+    'kids',
+    '33333333-3333-4333-8333-333333333333',
+    7,
+    time '19:30',
+    'Rua Nova, 10',
+    date '2026-07-01',
+    '{}'::uuid[]
+  );
+  raise exception 'aceitou dia 7';
+exception
+  when others then
+    if sqlerrm ilike '%aceitou dia 7%' then
+      raise;
+    end if;
+    if sqlerrm not ilike '%escolha o dia%' then
+      raise exception 'dia inválido: %', sqlerrm;
+    end if;
 end $$;
 
 -- Frequência antiga e o fechamento de junho continuam na célula do Bruno.
@@ -113,9 +159,11 @@ begin
   if n <> 1 then raise exception 'movimentação do Caio não foi gravada'; end if;
 end $$;
 
--- Update direto não fura o histórico.
+-- Update direto não fura o histórico. A RPC deixa o sinal ligado até o fim
+-- da transação; um pedido seguinte, no app, já nasce sem ele.
 do $$
 begin
+  perform set_config('internal.moving_children', 'off', true);
   update public.children
   set cell_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
   where id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb4';

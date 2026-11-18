@@ -4,6 +4,7 @@ import {
   canManageNetwork,
   canReassignBetween,
   leaderFitsCell,
+  multiplicationRpcArgs,
   validateMultiplication,
   type MultiplicationDraft,
 } from "./cell-multiplication"
@@ -96,5 +97,23 @@ describe("dados da célula nova", () => {
     expect(validateMultiplication(draft({ address: "a" }))).toMatch(/endereço/)
     expect(validateMultiplication(draft({ childIds: ["de-outra"] }))).toMatch(/não está na célula/)
     expect(validateMultiplication(draft({ name: " " }))).toMatch(/nome/)
+    expect(validateMultiplication(draft({ weekday: 7 }))).toMatch(/dia/)
+    expect(validateMultiplication(draft({ weekday: 3.5 }))).toMatch(/dia/)
+  })
+
+  it("manda p_dia como número inteiro para a RPC", () => {
+    const args = multiplicationRpcArgs("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1", draft())
+    expect(args).toEqual({
+      p_origem: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1",
+      p_nome: "Célula Nova",
+      p_tipo: "mista_juvenis",
+      p_lider: "clara",
+      p_dia: 3,
+      p_horario: "19:30",
+      p_endereco: "Rua Nova, 10",
+      p_data: "2026-07-01",
+      p_criancas: ["lia"],
+    })
+    expect(Number.isInteger(args.p_dia)).toBe(true)
   })
 })
