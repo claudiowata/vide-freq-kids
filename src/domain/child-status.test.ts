@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
   type AttendanceMark,
+  closeStatus,
+  effectOfRecordingAttendance,
   initialStatus,
   replayAttendance,
 } from "./child-status"
@@ -183,5 +185,101 @@ describe("status da criança", () => {
 
     const later = replayAttendance(cellDays("PAAA"))
     expect(later.snapshot.firstVisitOn).toBe("2026-06-01")
+  })
+})
+
+describe("status só muda na virada do mês", () => {
+  const june = cellDays("PPPP", "2026-06-02")
+
+  it("lançar 4 presenças no mês aberto não altera o status", () => {
+    const effect = effectOfRecordingAttendance({
+      marks: june,
+      storedStatus: "visitante",
+      evaluatedThrough: "2026-05-31",
+      today: "2026-06-18",
+    })
+    expect(effect.status).toBe("visitante")
+    expect(effect.evaluatedThrough).toBe("2026-05-31")
+    expect(effect.presenceStreak).toBe(4)
+  })
+
+  it("fechar o mês promove com 4 presenças e repetir o fechamento é igual", () => {
+    const first = closeStatus({
+      marks: june,
+      storedStatus: "visitante",
+      evaluatedThrough: "2026-05-31",
+      closeThrough: "2026-06-30",
+    })
+    expect(first.status).toBe("membro")
+    expect(first.history).toEqual([
+      {
+        from: "visitante",
+        to: "membro",
+        on: "2026-06-30",
+        reason: "quatro_presencas_consecutivas",
+      },
+    ])
+    const second = closeStatus({
+      marks: june,
+      storedStatus: first.status,
+      evaluatedThrough: first.evaluatedThrough,
+      closeThrough: "2026-06-30",
+    })
+    expect(second.status).toBe("membro")
+    expect(second.history).toEqual(first.history)
+    expect(second.evaluatedThrough).toBe("2026-06-30")
+
+    const earlier = closeStatus({
+      marks: june,
+      storedStatus: "membro",
+      evaluatedThrough: "2026-06-30",
+      closeThrough: "2026-05-31",
+    })
+    expect(earlier.status).toBe("membro")
+    expect(earlier.evaluatedThrough).toBe("2026-06-30")
+    expect(earlier.history).toEqual(first.history)
+  })
+
+  it("7 faltas no mês fechado continuam membro e a 8ª devolve a visitante", () => {
+    const seven = cellDays("PPPPAAAAAAA", "2026-06-01")
+    const closedSeven = closeStatus({
+      marks: seven,
+      storedStatus: "visitante",
+      evaluatedThrough: null,
+      closeThrough: "2026-06-30",
+    })
+    expect(closedSeven.status).toBe("membro")
+
+    const eight = cellDays("PPPPAAAAAAAA", "2026-06-01")
+    expect(
+      closeStatus({
+        marks: eight,
+        storedStatus: "membro",
+        evaluatedThrough: "2026-06-30",
+        closeThrough: "2026-06-30",
+      }).status,
+    ).toBe("visitante")
+  })
+
+  it("a sequência neutra atravessa meses e a semana do outro responsável não quebra", () => {
+    const marks = cellDays("PNPNPNPN", "2026-05-04")
+    const open = effectOfRecordingAttendance({
+      marks,
+      storedStatus: "visitante",
+      evaluatedThrough: "2026-04-30",
+      today: "2026-05-20",
+    })
+    expect(open.status).toBe("visitante")
+    expect(open.presenceStreak).toBe(4)
+
+    const closed = closeStatus({
+      marks,
+      storedStatus: "visitante",
+      evaluatedThrough: "2026-04-30",
+      closeThrough: "2026-06-30",
+    })
+    expect(closed.status).toBe("membro")
+    expect(closed.presenceStreak).toBe(4)
+    expect(closed.absenceStreak).toBe(0)
   })
 })
